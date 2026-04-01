@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+
+<style>
+html, body {
+    margin:0;
+    padding:0;
+    height:100%;
+    font-family:'Segoe UI', sans-serif;
+    overflow:hidden;
+    background:url('login.jpg') no-repeat center center fixed;
+    background-size:cover;
+}
+
+#bg {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+}
+
+.container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 320px;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    color:white;
+    box-shadow:0 0 25px rgba(0,0,0,0.5);
+
+    animation: fadeIn 0.8s ease;
+    transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.input-group {
+    position: relative;
+    margin: 20px 0;
+}
+
+.input-group input {
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    outline:none;
+}
+
+.input-group label {
+    position:absolute;
+    top:12px;
+    left:10px;
+    color:gray;
+    transition:0.3s;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+    top:-10px;
+    font-size:12px;
+    color:#00c6ff;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#00c6ff;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover {
+    background:#0072ff;
+    transform:scale(1.05);
+}
+
+.profile-pic {
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    object-fit:cover;
+    display:block;
+    margin: 0 auto 20px;
+}
+
+@keyframes fadeIn {
+    from {opacity:0; transform:scale(0.9);}
+    to {opacity:1; transform:scale(1);}
+}
+
+.shake {
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0% {transform:translateX(0);}
+    25% {transform:translateX(-10px);}
+    50% {transform:translateX(10px);}
+    75% {transform:translateX(-10px);}
+    100% {transform:translateX(0);}
+}
+
+#loadingScreen {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(5px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+#loadingScreen.show {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.loader {
+    width: 55px;
+    height: 55px;
+    border: 5px solid rgba(255,255,255,0.3);
+    border-top: 5px solid #00c6ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="container" id="box">
+    <h2>Login</h2>
+
+    <img id="profileDisplay" class="profile-pic" src="csaplogo.jpg">
+
+    <form id="loginForm">
+        <div class="input-group">
+            <input type="text" id="username" placeholder=" " required>
+            <label>Username</label>
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="password" placeholder=" " required>
+            <label>Password</label>
+        </div>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <a href="register.html">Create Account</a>
+</div>
+
+<div id="loadingScreen">
+    <div class="loader"></div>
+    <p>Logging in...</p>
+</div>
+
+<script>
+// --- Users Setup ---
+let users = JSON.parse(localStorage.getItem("users") || "[]");
+
+// Create default admin if not exists
+if(!users.some(u => u.username === "admin")){
+    users.push({
+        username:"admin",
+        password:"admin123",
+        role:"admin",
+        img:"csaplogo.jpg"
+    });
+    localStorage.setItem("users", JSON.stringify(users));
+}
+
+// --- Profile preview ---
+const usernameInput = document.getElementById("username");
+const profileDisplay = document.getElementById("profileDisplay");
+
+usernameInput.addEventListener("input", () => {
+    const user = users.find(u => u.username === usernameInput.value);
+    profileDisplay.src = user ? user.img : "csaplogo.jpg";
+});
+
+// --- Login logic ---
+const box = document.getElementById("box");
+const loadingScreen = document.getElementById("loadingScreen");
+
+document.getElementById("loginForm").addEventListener("submit", e => {
+    e.preventDefault();
+
+    const username = usernameInput.value;
+    const password = document.getElementById("password").value;
+
+    const user = users.find(u => u.username === username && u.password === password);
+
+    if(user){
+        box.style.opacity = "0";
+        box.style.transform = "scale(0.9)";
+
+        loadingScreen.classList.add("show");
+
+        setTimeout(() => {
+            // --- Save only essential info to protect student records ---
+            localStorage.setItem("currentUser", JSON.stringify({
+                username: user.username,
+                role: user.role || "student",
+                img: user.img || "csaplogo.jpg"
+            }));
+
+            // --- Redirect by role ---
+            if(user.role === "admin"){
+                location.href = "admin.html";
+            } else {
+                location.href = "studentdata.html";
+            }
+        }, 1200);
+
+    } else {
+        box.classList.add("shake");
+        setTimeout(() => box.classList.remove("shake"), 300);
+    }
+});
+</script>
+
+<script>
+// --- Particle background ---
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let particles = [];
+for(let i=0;i<100;i++){
+    particles.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        dx:(Math.random()-0.5),
+        dy:(Math.random()-0.5),
+        r:Math.random()*2+1
+    });
+}
+
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for(let p of particles){
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle="white";
+        ctx.fill();
+
+        p.x += p.dx;
+        p.y += p.dy;
+
+        if(p.x < 0) p.x = canvas.width;
+        if(p.y < 0) p.y = canvas.height;
+        if(p.x > canvas.width) p.x = 0;
+        if(p.y > canvas.height) p.y = 0;
+    }
+
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+</body>
+</html>

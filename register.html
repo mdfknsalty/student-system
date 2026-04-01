@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register</title>
+<style>
+body {
+    margin:0;
+    height:100vh;
+    font-family:'Segoe UI',sans-serif;
+    overflow:hidden;
+    background:url('login.jpg') no-repeat center center fixed;
+    background-size:cover;
+}
+
+/* Canvas background */
+#bg {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:0;
+}
+
+.container {
+    position: absolute; /* changed from relative */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 350px;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(12px);
+    color:white;
+    box-shadow: 0 0 20px #00f0ff, 0 0 40px rgba(0,240,255,0.2);
+    animation: fadeIn 1s ease;
+}
+
+.input-group { position: relative; margin: 15px 0; }
+.input-group input {
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    outline:none;
+}
+
+.input-group label {
+    position:absolute;
+    top:12px;
+    left:10px;
+    color:gray;
+    transition:0.3s;
+    pointer-events:none;
+}
+
+.input-group input:focus + label,
+.input-group input:not(:placeholder-shown) + label {
+    top:-10px;
+    font-size:12px;
+    color:#00f0ff;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#00c6ff;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover {
+    background:#0072ff;
+    transform:scale(1.05);
+    box-shadow: 0 0 15px #00f0ff;
+}
+
+a {
+    color:#00f0ff;
+    display:block;
+    margin-top:10px;
+}
+
+.profile-preview {
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    object-fit:cover;
+    margin-bottom:10px;
+}
+
+@keyframes fadeIn {
+    from {opacity:0; transform:scale(0.9);}
+    to {opacity:1; transform:scale(1);}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="container">
+<h2>Create Account</h2>
+
+<img id="preview" class="profile-preview" src="https://via.placeholder.com/60" alt="Profile Preview">
+
+<form id="registerForm">
+<div class="input-group">
+<input type="text" id="username" placeholder=" " required>
+<label>Username</label>
+</div>
+
+<div class="input-group">
+<input type="password" id="password" placeholder=" " required>
+<label>Password</label>
+</div>
+
+<div class="input-group">
+<input type="file" id="profilePic" accept="image/*">
+<label>Profile Picture</label>
+</div>
+
+<button type="submit">Register</button>
+</form>
+
+<a href="login.html">⬅ Back to Login</a>
+</div>
+
+<script>
+/* Profile Preview */
+const profilePicInput = document.getElementById("profilePic");
+const previewImg = document.getElementById("preview");
+
+profilePicInput.addEventListener("change", ()=>{
+    const file = profilePicInput.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = e => previewImg.src = e.target.result;
+        reader.readAsDataURL(file);
+    } else {
+        previewImg.src="https://via.placeholder.com/60";
+    }
+});
+
+/* Register Logic */
+const registerForm = document.getElementById("registerForm");
+
+registerForm.addEventListener("submit", e=>{
+    e.preventDefault();
+
+    let users = JSON.parse(localStorage.getItem("users")||"[]");
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const file = profilePicInput.files[0];
+
+    // Prevent duplicate username
+    if(users.some(u=>u.username===username)){
+        alert("Username already exists!");
+        return;
+    }
+
+    // Protect admin account
+    if(username.toLowerCase() === "admin"){
+        alert("Cannot register as admin!");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = ()=>{
+
+        const imgData = reader.result || "https://via.placeholder.com/60";
+
+        users.push({
+            username,
+            password,
+            role:"student",
+            img: imgData
+        });
+
+        localStorage.setItem("users", JSON.stringify(users));
+        alert("Account created!");
+        window.location.href="login.html";
+    }
+
+    if(file){
+        reader.readAsDataURL(file);
+    } else reader.onload();
+});
+</script>
+
+<!-- Meteor Neon Background -->
+<script>
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+
+function resize(){
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+class Meteor {
+    constructor(){
+        this.reset();
+    }
+
+    reset(){
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * -canvas.height;
+        this.length = Math.random() * 80 + 50;
+        this.speed = Math.random() * 4 + 4;
+        this.angle = Math.PI / 4;
+        this.size = Math.random() * 2 + 1;
+
+        const colors = ["#00f0ff", "#7a00ff", "#00ffcc", "#ff00ff"];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    update(){
+        this.x += this.speed * Math.cos(this.angle);
+        this.y += this.speed * Math.sin(this.angle);
+
+        if(this.y > canvas.height || this.x > canvas.width){
+            this.reset();
+        }
+    }
+
+    draw(){
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(
+            this.x - this.length * Math.cos(this.angle),
+            this.y - this.length * Math.sin(this.angle)
+        );
+
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = this.size;
+
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.color;
+
+        ctx.stroke();
+        ctx.closePath();
+    }
+}
+
+let meteors = [];
+for(let i = 0; i < 40; i++){
+    meteors.push(new Meteor());
+}
+
+function animate(){
+    ctx.fillStyle = "rgba(0,0,0,0.15)";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    meteors.forEach(m => {
+        m.update();
+        m.draw();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>

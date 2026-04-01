@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="container">
+    <h2>Dashboard</h2>
+
+    <!-- LOGOUT BUTTON -->
+    <button onclick="logout()">Logout</button>
+
+    <canvas id="chart"></canvas>
+</div>
+
+<script>
+/* ✅ LOGIN PROTECTION */
+const user = JSON.parse(localStorage.getItem("currentUser"));
+
+if (!user) {
+    alert("Please log in first");
+    window.location.href = "login.html";
+}
+
+/* ✅ LOGOUT FUNCTION */
+function logout() {
+    localStorage.removeItem("currentUser");
+    localStorage.removeItem("rememberedUser");
+
+    sessionStorage.setItem("loggedOut", "true");
+
+    window.location.href = "login.html";
+}
+
+/* YOUR EXISTING CHART CODE */
+let students = JSON.parse(localStorage.getItem("students") || "[]");
+
+let canvas = document.getElementById("chart");
+let ctx = canvas.getContext("2d");
+
+canvas.width = 300;
+canvas.height = 200;
+
+function draw(){
+    ctx.clearRect(0,0,300,200);
+
+    ctx.fillStyle = "blue";
+    ctx.fillRect(50,100,50,students.length * 5);
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+</body>
+</html>

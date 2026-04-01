@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Student Enrollment</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+    margin:0;
+    font-family: Arial, sans-serif;
+    height:100vh;
+    overflow:hidden;
+    background: url('studentdata.jpg') no-repeat center center fixed;
+    background-size: cover;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+body::before {
+    content:"";
+    position:fixed;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(8px);
+    z-index:0;
+}
+
+body.fade-out {
+    opacity:0;
+    transform: translateX(-100px) scale(0.95);
+}
+
+.meteors {
+    position:fixed;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    z-index:1;
+}
+
+.meteor {
+    position:absolute;
+    width:2px;
+    height:80px;
+    background: linear-gradient(45deg, #00f0ff, #ff00ff, transparent);
+    box-shadow: 0 0 10px #00f0ff, 0 0 20px #ff00ff;
+    animation: fall linear infinite;
+    opacity:0;
+}
+
+@keyframes fall {
+    0% {
+        transform: translateY(-100px) translateX(0) rotate(45deg);
+        opacity:1;
+    }
+    100% {
+        transform: translateY(120vh) translateX(-300px) rotate(45deg);
+        opacity:0;
+    }
+}
+
+.orbs::before, .orbs::after {
+    content:"";
+    position:fixed;
+    width:250px;
+    height:250px;
+    border-radius:50%;
+    background: radial-gradient(circle, rgba(255,0,255,0.6), transparent);
+    filter: blur(60px);
+    animation: floatOrb 10s infinite ease-in-out;
+    z-index:1;
+}
+
+.orbs::before {
+    top:15%;
+    left:15%;
+}
+
+.orbs::after {
+    bottom:10%;
+    right:10%;
+    animation-delay:5s;
+}
+
+@keyframes floatOrb {
+    0% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-80px) scale(1.3); }
+    100% { transform: translateY(0px) scale(1); }
+}
+
+#particles {
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:1;
+}
+
+.container {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    z-index:2;
+    width:380px;
+    padding:35px;
+    border-radius:20px;
+    text-align:center;
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(25px);
+    color:#eaf6ff;
+    border:1px solid rgba(255,255,255,0.3);
+    box-shadow: 0 0 20px #00f0ff, 0 0 60px #ff00ff;
+}
+
+h2 {
+    color:#fff;
+    text-shadow: 0 0 10px #00f0ff, 0 0 20px #ff00ff;
+}
+
+input, select, button {
+    width:100%;
+    margin:8px 0;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    outline:none;
+    font-size:14px;
+}
+
+input, select {
+    background: rgba(0,0,0,0.4);
+    color:#fff;
+    border:1px solid rgba(255,255,255,0.4);
+}
+
+button {
+    background: linear-gradient(135deg, #00f0ff, #ff00ff);
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover {
+    transform:scale(1.07);
+    box-shadow:0 0 20px #00f0ff;
+}
+
+.ripple {
+    position:absolute;
+    border-radius:50%;
+    transform:scale(0);
+    animation:rippleEffect 0.6s linear;
+    background: rgba(255,255,255,0.5);
+}
+
+@keyframes rippleEffect {
+    to {
+        transform:scale(4);
+        opacity:0;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="orbs"></div>
+<div class="meteors" id="meteors"></div>
+<canvas id="particles"></canvas>
+
+<div class="container" id="card">
+    <h2>Enroll Student</h2>
+
+    <form id="form">
+        <input type="text" id="name" placeholder="Full Name" required>
+        <input type="number" id="age" placeholder="Age" required>
+
+        <select id="sex" required>
+            <option value="">Select Sex</option>
+            <option>Male</option>
+            <option>Female</option>
+        </select>
+
+        <input type="text" id="grade" placeholder="Grade Level" required>
+        <input type="text" id="section" placeholder="Section" required>
+        <input type="file" id="profilePic" accept="image/*">
+
+        <button type="submit" class="ripple-btn">Enroll Student</button>
+    </form>
+
+    <a id="goRecords">⬅ Go to Student Records</a>
+</div>
+
+<script>
+const meteorContainer = document.getElementById("meteors");
+
+function createMeteor() {
+    const m = document.createElement("div");
+    m.classList.add("meteor");
+
+    m.style.left = Math.random() * window.innerWidth + "px";
+    m.style.top = Math.random() * -200 + "px";
+    m.style.animationDuration = (Math.random() * 2 + 2) + "s";
+    m.style.opacity = Math.random();
+
+    meteorContainer.appendChild(m);
+
+    setTimeout(() => m.remove(), 4000);
+}
+
+setInterval(createMeteor, 300);
+
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let particles = [];
+
+for(let i=0;i<80;i++){
+    particles.push({
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
+        dx:(Math.random()-0.5)*0.5,
+        dy:(Math.random()-0.5)*0.5,
+        r:1.5
+    });
+}
+
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    particles.forEach(p=>{
+        p.x += p.dx;
+        p.y += p.dy;
+
+        ctx.fillStyle = "#00f0ff";
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+}
+animate();
+
+const card = document.getElementById("card");
+
+document.addEventListener("mousemove", (e)=>{
+    let x = (e.clientX - window.innerWidth/2) / 40;
+    let y = (e.clientY - window.innerHeight/2) / 40;
+
+    card.style.transform = `translate(-50%, -50%) rotateY(${x}deg) rotateX(${-y}deg)`;
+});
+
+document.querySelectorAll(".ripple-btn").forEach(btn=>{
+    btn.addEventListener("click", function(e){
+        let circle = document.createElement("span");
+        let rect = this.getBoundingClientRect();
+        let size = Math.max(rect.width, rect.height);
+
+        circle.style.width = circle.style.height = size + "px";
+        circle.style.left = e.clientX - rect.left - size/2 + "px";
+        circle.style.top = e.clientY - rect.top - size/2 + "px";
+        circle.classList.add("ripple");
+
+        this.appendChild(circle);
+
+        setTimeout(()=>circle.remove(),600);
+    });
+});
+
+const form = document.getElementById("form");
+
+form.addEventListener("submit", function(e){
+    e.preventDefault();
+
+    const nameVal = document.getElementById("name").value;
+    const ageVal = document.getElementById("age").value;
+    const sexVal = document.getElementById("sex").value;
+    const gradeVal = document.getElementById("grade").value;
+    const sectionVal = document.getElementById("section").value;
+    const file = document.getElementById("profilePic").files[0];
+
+    const reader = new FileReader();
+
+    reader.onload = function(){
+        let students = JSON.parse(localStorage.getItem("students") || "[]");
+
+        students.push({
+            name: nameVal,
+            age: ageVal,
+            sex: sexVal,
+            grade: gradeVal,
+            section: sectionVal,
+            img: reader.result
+        });
+
+        localStorage.setItem("students", JSON.stringify(students));
+        transition("studentdata.html");
+    };
+
+    if(file){
+        reader.readAsDataURL(file);
+    } else {
+        reader.onload();
+    }
+});
+
+function transition(page){
+    document.body.classList.add("fade-out");
+    setTimeout(()=>{ window.location.href = page; },600);
+}
+
+document.getElementById("goRecords").addEventListener("click", function(){
+    transition("studentdata.html");
+});
+</script>
+
+</body>
+</html>
